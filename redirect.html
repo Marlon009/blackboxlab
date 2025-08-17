@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackBox Lab - EM BREVE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!--Dia 01/09 o site será lançado. Será um site lab/portifólio com ferramentas para pentesters e
+     desenvolvedores e físicos, além de divulgação de projetos e pesquisas que estarei desenvolvendo-->
+    <!--Não há nenhuma outra flag para ti, sorry ;(   -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            font-family: 'Share Tech Mono', monospace;
+            color: #00ff41;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            position: relative;
+            padding: 20px;
+        }
+        
+        /* Efeito de terminal responsivo */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(10, 10, 10, 0.8) 50%, 
+                rgba(0, 0, 0, 0.95) 50%),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03), rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px, 4px 100%;
+            z-index: -2;
+        }
+        
+        .binary-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        .binary-digit {
+            position: absolute;
+            color: rgba(0, 255, 65, 0.2);
+            font-size: 1.2rem;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .glitch-text {
+            font-size: clamp(2rem, 7vw, 5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            position: relative;
+            text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
+            margin-bottom: 1.5rem;
+            letter-spacing: 4px;
+            animation: glitch 2s infinite;
+            font-family: 'Orbitron', sans-serif;
+            line-height: 1.2;
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 3px); }
+            40% { transform: translate(-3px, -3px); }
+            60% { transform: translate(3px, 3px); }
+            80% { transform: translate(3px, -3px); }
+            100% { transform: translate(0); }
+        }
+        
+        .terminal-container {
+            position: relative;
+            width: clamp(220px, 40vw, 400px);
+            height: clamp(220px, 40vw, 400px);
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .terminal-icon {
+            font-size: clamp(8rem, 25vw, 15rem);
+            color: #8a2be2;
+            position: relative;
+            text-shadow: 0 0 20px #9400d3, 0 0 40px #8a2be2;
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: clamp(5rem, 16vw, 9rem);
+            background: #00ff41;
+            margin-left: 10px;
+            animation: blink 1s infinite;
+            box-shadow: 0 0 15px #00ff41;
+            left: 50%;
+            top: 50%;
+            transform: translate(60%, -50%);
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 10px #8a2be2, 0 0 20px #8a2be2; }
+            100% { text-shadow: 0 0 30px #9400d3, 0 0 60px #8a2be2; }
+        }
+        
+        .circuit-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .circuit-line {
+            position: absolute;
+            background: #8a2be2;
+            box-shadow: 0 0 5px #9400d3;
+        }
+        
+        .line-horizontal {
+            width: 100%;
+            height: 2px;
+        }
+        
+        .line-vertical {
+            width: 2px;
+            height: 100%;
+        }
+        
+        .countdown {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 1.5rem 0;
+            width: 100%;
+            max-width: 700px;
+        }
+        
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+            padding: 12px;
+            background: rgba(10, 10, 10, 0.7);
+            border: 2px solid #8a2be2;
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+            flex: 1;
+            max-width: 150px;
+        }
+        
+        .countdown-value {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: bold;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            margin-bottom: 5px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .countdown-label {
+            font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+            color: #8a2be2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /*Você é insistente, não há mais nenhuma flag aqui*/
+        
+        .coming-soon {
+            font-size: clamp(1.2rem, 3.5vw, 2rem);
+            margin-top: 1rem;
+            color: #8a2be2;
+            text-shadow: 0 0 8px #9400d3;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            animation: pulse 2s infinite;
+            font-family: 'Orbitron', sans-serif;
+            padding: 12px 25px;
+            border: 2px solid #8a2be2;
+            border-radius: 8px;
+            background: rgba(10, 10, 10, 0.7);
+            box-shadow: 0 0 12px rgba(138, 43, 226, 0.5);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+            100% { opacity: 0.7; transform: scale(1); }
+        }
+        
+        .glow-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(20px);
+            z-index: -1;
+            animation: glow-pulse 3s infinite alternate;
+        }
+        
+        @keyframes glow-pulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
+        
+        .hacker-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 65, 0.05),
+                rgba(0, 255, 65, 0.05) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: scan 10s linear infinite;
+            z-index: 0;
+        }
+        
+        @keyframes scan {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+        
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 90%;
+        }
+        
+        .code-effect {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(0, 255, 65, 0.5);
+            text-shadow: 0 0 5px #00ff41;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .code-line {
+            display: inline-block;
+            animation: code-scroll 20s linear infinite;
+        }
+        
+        @keyframes code-scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .launch-date {
+            position: absolute;
+            bottom: 50px;
+            font-size: 1rem;
+            color: #8a2be2;
+            text-shadow: 0 0 5px #9400d3;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+        
+        /* Adaptações para telas pequenas */
+        @media (max-width: 768px) {
+            .countdown {
+                gap: 8px;
+            }
+            
+            .countdown-item {
+                min-width: 80px;
+                padding: 10px;
+            }
+            
+            .terminal-container {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .glitch-text {
+                margin-bottom: 1rem;
+            }
+            
+            .coming-soon {
+                margin-top: 0.5rem;
+                padding: 10px 20px;
+            }
+            
+            .launch-date {
+                bottom: 40px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .countdown {
+                gap: 5px;
+            }
+            
+            .countdown-item {
+                min-width: 70px;
+                padding: 8px;
+            }
+            
+            .countdown-value {
+                font-size: 1.5rem;
+            }
+            
+            .countdown-label {
+                font-size: 0.65rem;
+            }
+            
+            .terminal-container {
+                width: 180px;
+                height: 180px;
+                margin: 1rem 0;
+            }
+            
+            .glitch-text {
+                font-size: 2rem;
+                letter-spacing: 3px;
+                margin-bottom: 0.8rem;
+            }
+            
+            .coming-soon {
+                font-size: 1.1rem;
+                padding: 8px 15px;
+                letter-spacing: 2px;
+            }
+            
+            .launch-date {
+                bottom: 30px;
+                font-size: 0.7rem;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            .content-wrapper {
+                transform: scale(0.85);
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .content-wrapper {
+                transform: scale(0.75);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg"></div>
+    <div class="hacker-lines"></div>
+    <div class="binary-rain"></div>
+    <div class="glow-effect"></div>
+    
+    <div class="container">
+        <div class="content-wrapper">
+            <h1 class="glitch-text">EM BREVE</h1>
+            
+            <div class="terminal-container">
+                <div class="terminal-icon">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div class="cursor"></div>
+                
+                <div class="circuit-lines">
+                    <div class="circuit-line line-horizontal" style="top: 20%;"></div>
+                    <div class="circuit-line line-horizontal" style="bottom: 20%;"></div>
+                    <div class="circuit-line line-vertical" style="left: 30%;"></div>
+                    <div class="circuit-line line-vertical" style="right: 30%;"></div>
+                </div>
+            </div>
+            
+            <div class="countdown">
+                <div class="countdown-item">
+                    <div id="days" class="countdown-value">07</div>
+                    <div class="countdown-label">dias</div>
+                </div>
+                <div class="countdown-item">
+                    <div id="hours" class="countdown-value">00</div>
+                    <div class="countdown-label">horas</div>
+                </div>
+                <div class="countdown-item">
+                    <div id="minutes" class="countdown-value">00</div>
+                    <div class="countdown-label">minutos</div>
+                </div>
+                <div class="countdown-item">
+                    <div id="seconds" class="countdown-value">00</div>
+                    <div class="countdown-label">segundos</div>
+                </div>
+            </div>
+            
+            <h2 class="coming-soon">BlackBox Lab is Coming...</h2>
+        </div>
+    </div>
+    
+    <div class="launch-date"></div>
+    
+    <div class="code-effect">
+        <div class="code-line">>> INITIATING LAUNCH SEQUENCE >> BLACKBOX_LAB.EXE >> SYSTEM READY IN: <span id="countdown-display">7d 0h 0m 0s</span> >> ENCRYPTION: AES-256 >> STATUS: SECURE</div>
+    </div>
+
+    <script>
+        // Data de lançamento fixa: 25 de agosto de 2025
+        const launchDate = new Date('September 1, 2025 00:00:00');
+        
+        // Atualiza o contador a cada segundo
+        const countdown = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = launchDate - now;
+            
+            // Cálculos para dias, horas, minutos e segundos
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Atualiza os elementos HTML
+            document.getElementById("days").textContent = days.toString().padStart(2, '0');
+            document.getElementById("hours").textContent = hours.toString().padStart(2, '0');
+            document.getElementById("minutes").textContent = minutes.toString().padStart(2, '0');
+            document.getElementById("seconds").textContent = seconds.toString().padStart(2, '0');
+            document.getElementById("countdown-display").textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            
+            // Se a contagem regressiva terminar
+            if (distance < 0) {
+                clearInterval(countdown);
+                document.querySelector(".countdown").innerHTML = '<div class="countdown-item"><div class="countdown-value">LANÇAMENTO!</div></div>';
+                document.getElementById("countdown-display").textContent = "SYSTEM ONLINE";
+                document.querySelector(".launch-date").textContent = "LANÇAMENTO REALIZADO!";
+            }
+        }, 1000);
+        
+        // Cria o efeito de chuva binária
+        function createBinaryRain() {
+            const container = document.querySelector('.binary-rain');
+            const digits = '01';
+            const digitCount = 80;
+            
+            for (let i = 0; i < digitCount; i++) {
+                const digit = document.createElement('div');
+                digit.className = 'binary-digit';
+                digit.textContent = digits.charAt(Math.floor(Math.random() * digits.length));
+                
+                // Posição e velocidade aleatórias
+                const left = Math.random() * 100;
+                const animationDuration = 5 + Math.random() * 15;
+                const animationDelay = Math.random() * 5;
+                
+                digit.style.left = `${left}%`;
+                digit.style.animationDuration = `${animationDuration}s`;
+                digit.style.animationDelay = `${animationDelay}s`;
+                
+                container.appendChild(digit);
+            }
+        }
+        
+        createBinaryRain();
+        
+        // Ajustar conteúdo para telas pequenas
+        function adjustLayout() {
+            const wrapper = document.querySelector('.content-wrapper');
+            const windowHeight = window.innerHeight;
+            const contentHeight = wrapper.scrollHeight;
+            
+            if (windowHeight < 600 && contentHeight > windowHeight * 0.8) {
+                const scale = Math.min(0.8, windowHeight / (contentHeight * 1.2));
+                wrapper.style.transform = `scale(${scale})`;
+            } else {
+                wrapper.style.transform = 'scale(1)';
+            }
+        }
+        
+        // Ajusta o layout quando a janela é redimensionada
+        window.addEventListener('resize', adjustLayout);
+        adjustLayout();
+    </script>
+<!--Ok, pegue esse link e seja feliz: https://www.youtube.com/watch?v=dQw4w9WgXcQ-->
+</body>
+</html>
